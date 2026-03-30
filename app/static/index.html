@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAD - Empresa</title>
+    <link rel="icon" type="image/webp" href="/static/favicon.webp">
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --verde: #00784E;
+            --verde-dark: #005C3B;
+            --amarelo: #EAAB00;
+            --cinza: #989AA5;
+            --cinza-light: #E8E8EC;
+            --branco: #FFFFFF;
+            --erro: #C0392B;
+            --sucesso: #00784E;
+            --texto: #2D2D2D;
+            --texto-secundario: #5A5A6E;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100%;
+            font-family: "Lucida Sans", "Lucida Grande", "Lucida Sans Unicode", sans-serif;
+            background: var(--branco);
+            color: var(--texto);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Trapezoid top bar — 331.3deg angle via skew */
+        .trapezoid-top {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(
+                90deg,
+                var(--verde) 0%,
+                var(--verde) 60%,
+                var(--amarelo) 60%,
+                var(--amarelo) 100%
+            );
+            z-index: 100;
+        }
+
+        .trapezoid-bg {
+            position: fixed;
+            top: 0;
+            right: -120px;
+            width: 400px;
+            height: 100vh;
+            background: var(--verde);
+            opacity: 0.03;
+            transform: skewX(-28.7deg);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .trapezoid-bg-accent {
+            position: fixed;
+            top: 0;
+            right: -60px;
+            width: 180px;
+            height: 100vh;
+            background: var(--amarelo);
+            opacity: 0.04;
+            transform: skewX(-28.7deg);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .page-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 460px;
+            background: var(--branco);
+            border: 1px solid var(--cinza-light);
+            border-radius: 4px;
+            padding: 48px 40px 40px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Logo area — breathing room as per PRD */
+        .logo-area {
+            margin-bottom: 36px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--cinza-light);
+        }
+
+        .logo-mark {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+
+        .logo-img {
+            width: 52px;
+            height: 52px;
+            object-fit: contain;
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--verde);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .logo-text span {
+            color: var(--amarelo);
+        }
+
+        .page-title {
+            font-size: 15px;
+            color: var(--texto-secundario);
+            font-weight: 400;
+            margin-top: 6px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--texto);
+            margin-bottom: 6px;
+            letter-spacing: 0.2px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--texto);
+            background: var(--branco);
+            border: 1px solid var(--cinza-light);
+            border-radius: 3px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus {
+            border-color: var(--verde);
+            box-shadow: 0 0 0 2px rgba(0, 120, 78, 0.08);
+        }
+
+        .form-group input.input-error {
+            border-color: var(--erro);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--cinza);
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password:hover {
+            color: var(--texto-secundario);
+        }
+
+        .toggle-password svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .field-hint {
+            font-size: 12px;
+            color: var(--texto-secundario);
+            margin-top: 4px;
+        }
+
+        .field-error {
+            font-size: 12px;
+            color: var(--erro);
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
+        }
+
+        /* Password strength bar */
+        .strength-bar {
+            height: 3px;
+            background: var(--cinza-light);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .strength-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .strength-label {
+            font-size: 11px;
+            color: var(--texto-secundario);
+            margin-top: 3px;
+            min-height: 16px;
+        }
+
+        /* Submit button */
+        .submit-btn {
+            width: 100%;
+            padding: 13px 20px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--branco);
+            background: var(--verde);
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            letter-spacing: 0.3px;
+            margin-top: 8px;
+            position: relative;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: var(--verde-dark);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .submit-btn .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--branco);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .submit-btn.loading .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        /* Feedback messages */
+        .feedback {
+            padding: 12px 14px;
+            border-radius: 3px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .feedback.visible {
+            display: block;
+        }
+
+        .feedback.success {
+            background: rgba(0, 120, 78, 0.06);
+            border: 1px solid rgba(0, 120, 78, 0.15);
+            color: var(--sucesso);
+        }
+
+        .feedback.error {
+            background: rgba(192, 57, 43, 0.06);
+            border: 1px solid rgba(192, 57, 43, 0.15);
+            color: var(--erro);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 16px 24px;
+            font-size: 11px;
+            color: var(--cinza);
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 520px) {
+            .card {
+                padding: 36px 24px 28px;
+            }
+
+            .logo-text {
+                font-size: 19px;
+            }
+
+            .logo-img {
+                width: 44px;
+                height: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="trapezoid-top"></div>
+    <div class="trapezoid-bg"></div>
+    <div class="trapezoid-bg-accent"></div>
+
+    <div class="page-wrapper">
+        <div class="card">
+            <!-- Logo area with breathing room as per PRD -->
+            <div class="logo-area">
+                <div class="logo-mark">
+                    <img
+                        src="/static/favicon.webp"
+                        alt="Empresa"
+                        class="logo-img"
+                        draggable="false"
+                    />
+                    <div class="logo-text">Empresa</div>
+                </div>
+                <p class="page-title">Alteracao de Senha</p>
+            </div>
+
+            <!-- Feedback area -->
+            <div id="feedback" class="feedback" role="alert" aria-live="polite"></div>
+
+            <!-- Password change form -->
+            <form id="passwordForm" novalidate autocomplete="off">
+                <div class="form-group">
+                    <label for="upn">Usuario (UPN)</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="text"
+                            id="upn"
+                            name="upn"
+                            placeholder="usuario@empresa.local"
+                            autocomplete="username"
+                            required
+                            maxlength="256"
+                            spellcheck="false"
+                        />
+                    </div>
+                    <div class="field-error" id="upnError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="currentPassword">Senha Atual</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="currentPassword"
+                            name="current_password"
+                            placeholder="Digite sua senha atual"
+                            autocomplete="current-password"
+                            required
+                            maxlength="128"
+                        />
+                        <button type="button" class="toggle-password" data-target="currentPassword" aria-label="Mostrar senha">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="field-error" id="currentPasswordError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="newPassword">Nova Senha</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="newPassword"
+                            name="new_password"
+                            placeholder="Digite a nova senha"
+                            autocomplete="new-password"
+                            required
+                            maxlength="128"
+                        />
+                        <button type="button" class="toggle-password" data-target="newPassword" aria-label="Mostrar senha">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="strength-bar"><div class="strength-bar-fill" id="strengthFill"></div></div>
+                    <div class="strength-label" id="strengthLabel"></div>
+                    <div class="field-hint">Minimo de 8 caracteres. Deve atender a politica de complexidade do dominio.</div>
+                    <div class="field-error" id="newPasswordError"></div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Alterar Senha
+                    <span class="spinner"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="footer">Empresa &mdash; OpenAD &mdash; Portal de Autoatendimento</div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            var form = document.getElementById("passwordForm");
+            var submitBtn = document.getElementById("submitBtn");
+            var feedback = document.getElementById("feedback");
+            var upnInput = document.getElementById("upn");
+            var currentPwInput = document.getElementById("currentPassword");
+            var newPwInput = document.getElementById("newPassword");
+            var strengthFill = document.getElementById("strengthFill");
+            var strengthLabel = document.getElementById("strengthLabel");
+
+            var UPN_REGEX = /^[a-zA-Z0-9_.+\-]+@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*$/;
+
+            document.querySelectorAll(".toggle-password").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    var target = document.getElementById(btn.getAttribute("data-target"));
+                    if (target.type === "password") {
+                        target.type = "text";
+                        btn.setAttribute("aria-label", "Ocultar senha");
+                    } else {
+                        target.type = "password";
+                        btn.setAttribute("aria-label", "Mostrar senha");
+                    }
+                });
+            });
+
+            function evaluateStrength(password) {
+                if (!password) return { score: 0, label: "", color: "" };
+                var score = 0;
+                if (password.length >= 8) score++;
+                if (password.length >= 12) score++;
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+                if (/\d/.test(password)) score++;
+                if (/[^a-zA-Z0-9]/.test(password)) score++;
+
+                var levels = [
+                    { label: "", color: "" },
+                    { label: "Fraca", color: "#C0392B" },
+                    { label: "Razoavel", color: "#E67E22" },
+                    { label: "Boa", color: "#EAAB00" },
+                    { label: "Forte", color: "#27AE60" },
+                    { label: "Muito forte", color: "#00784E" }
+                ];
+                return { score: score, label: levels[score].label, color: levels[score].color };
+            }
+
+            newPwInput.addEventListener("input", function () {
+                var result = evaluateStrength(newPwInput.value);
+                strengthFill.style.width = (result.score * 20) + "%";
+                strengthFill.style.backgroundColor = result.color;
+                strengthLabel.textContent = result.label;
+                strengthLabel.style.color = result.color;
+            });
+
+            function showFieldError(id, message) {
+                var el = document.getElementById(id);
+                el.textContent = message;
+                el.classList.add("visible");
+            }
+
+            function clearFieldErrors() {
+                document.querySelectorAll(".field-error").forEach(function (el) {
+                    el.textContent = "";
+                    el.classList.remove("visible");
+                });
+                document.querySelectorAll("input").forEach(function (el) {
+                    el.classList.remove("input-error");
+                });
+            }
+
+            function showFeedback(message, type) {
+                feedback.textContent = message;
+                feedback.className = "feedback visible " + type;
+            }
+
+            function hideFeedback() {
+                feedback.className = "feedback";
+                feedback.textContent = "";
+            }
+
+            function validateForm() {
+                var valid = true;
+
+                if (!upnInput.value.trim()) {
+                    showFieldError("upnError", "Informe seu usuario (UPN).");
+                    upnInput.classList.add("input-error");
+                    valid = false;
+                } else if (!UPN_REGEX.test(upnInput.value.trim())) {
+                    showFieldError("upnError", "Formato invalido. Use: usuario@empresa.local");
+                    upnInput.classList.add("input-error");
+                    valid = false;
+                }
+
+                if (!currentPwInput.value) {
+                    showFieldError("currentPasswordError", "Informe sua senha atual.");
+                    currentPwInput.classList.add("input-error");
+                    valid = false;
+                }
+
+                if (!newPwInput.value) {
+                    showFieldError("newPasswordError", "Informe a nova senha.");
+                    newPwInput.classList.add("input-error");
+                    valid = false;
+                } else if (newPwInput.value.length < 8) {
+                    showFieldError("newPasswordError", "A nova senha deve ter ao menos 8 caracteres.");
+                    newPwInput.classList.add("input-error");
+                    valid = false;
+                } else if (newPwInput.value === currentPwInput.value) {
+                    showFieldError("newPasswordError", "A nova senha deve ser diferente da senha atual.");
+                    newPwInput.classList.add("input-error");
+                    valid = false;
+                }
+
+                return valid;
+            }
+
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                clearFieldErrors();
+                hideFeedback();
+
+                if (!validateForm()) return;
+
+                submitBtn.disabled = true;
+                submitBtn.classList.add("loading");
+
+                var payload = {
+                    upn: upnInput.value.trim(),
+                    current_password: currentPwInput.value,
+                    new_password: newPwInput.value
+                };
+
+                fetch("/api/change-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                })
+                .then(function (response) {
+                    return response.json().then(function (data) {
+                        return { status: response.status, data: data };
+                    });
+                })
+                .then(function (result) {
+                    if (result.data.success) {
+                        showFeedback(result.data.message, "success");
+                        form.reset();
+                        strengthFill.style.width = "0%";
+                        strengthLabel.textContent = "";
+                    } else {
+                        showFeedback(result.data.message, "error");
+                    }
+                })
+                .catch(function () {
+                    showFeedback("Erro de conexao. Verifique sua rede e tente novamente.", "error");
+                })
+                .finally(function () {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove("loading");
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
