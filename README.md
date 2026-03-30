@@ -259,7 +259,7 @@ docker inspect openad --format='{{.State.Health.Status}}'
 ```bash
 # Teste de bind com ldapsearch (requer ldap-utils instalado no host)
 ldapsearch -x -H ldap://dc01.empresa.local:389 \
-  -D "svc-openad@empresa.local" \
+  -D "openad.connect@empresa.local" \
   -w "SUA_SENHA" \
   -b "dc=empresa,dc=local" \
   "(userPrincipalName=usuario@empresa.local)" dn

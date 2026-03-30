@@ -14,13 +14,13 @@ class Settings:
     LDAP_BASE_DN: str = os.getenv("LDAP_BASE_DN", "")
 
     # Transport security
-    # LDAP_USE_SSL=true  → LDAPS (implicit TLS, port 636)
+    # LDAPS has been disabled in this application.
     # LDAP_USE_TLS=true  → StartTLS upgrade on plain connection (port 389)
-    # Both false         → plain LDAP (port 389, dev/internal only)
-    LDAP_USE_SSL: bool = os.getenv("LDAP_USE_SSL", "false").lower() == "true"
+    # When false         → plain LDAP (port 389, dev/internal only)
+    LDAP_USE_SSL: bool = False
     LDAP_USE_TLS: bool = os.getenv("LDAP_USE_TLS", "false").lower() == "true"
 
-    # Path to CA certificate file — required when LDAP_USE_SSL or LDAP_USE_TLS is true
+    # Path to CA certificate file — used when LDAP_USE_TLS is true
     # and the server uses a self-signed or internal CA certificate.
     CA_CERT_PATH: str = os.getenv("CA_CERT_PATH", "")
 
@@ -48,8 +48,6 @@ class Settings:
             missing.append("LDAP_BIND_USER")
         if not self.LDAP_BIND_PASSWORD:
             missing.append("LDAP_BIND_PASSWORD")
-        if self.LDAP_USE_SSL and self.LDAP_USE_TLS:
-            missing.append("LDAP_USE_SSL and LDAP_USE_TLS cannot both be true")
         return missing
 
 

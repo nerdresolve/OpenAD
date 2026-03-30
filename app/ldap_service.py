@@ -9,7 +9,7 @@ Orchestrates the two-step password change flow:
 import logging
 
 import ldap3
-from ldap3 import MODIFY_ADD, MODIFY_DELETE
+from ldap3 import MODIFY_REPLACE
 from ldap3.core.exceptions import LDAPBindError, LDAPException
 from ldap3.utils.conv import escape_filter_chars
 
@@ -21,6 +21,7 @@ logger = logging.getLogger("openad")
 # Mapping of AD sub-error codes to user-facing Portuguese messages
 _AD_ERROR_MESSAGES: dict[str, str] = {
     "52e": "Usuario ou senha atual incorretos.",
+    "52d": "A nova senha foi recusada pela politica do Active Directory. Verifique historico, complexidade e idade minima da senha.",
     "530": "Conta sem permissao de acesso neste horario.",
     "531": "Conta sem permissao de acesso nesta estacao de trabalho.",
     "532": "Senha expirada. Entre em contato com o suporte de TI.",
@@ -30,12 +31,19 @@ _AD_ERROR_MESSAGES: dict[str, str] = {
     "775": "Conta bloqueada. Entre em contato com o suporte de TI.",
 }
 
-# Mapping of LDAP result description fragments to user-facing messages
+# Mapping of LDAP result description fragments to user-facing messages.
+# AD returns camelCase descriptions (e.g. "unwillingToPerform") and underscore
+# error codes (e.g. "WILL_NOT_PERFORM") — both must be covered alongside the
+# spaced LDAP3 variants so the fallback message is never shown for known errors.
 _CONSTRAINT_MESSAGES: list[tuple[str, str]] = [
     ("check_password_restrictions", "A nova senha nao atende aos requisitos de complexidade."),
-    ("will not perform", "Alteracao de senha recusada pela politica do servidor."),
-    ("unwilling to perform", "Alteracao de senha recusada pela politica do servidor."),
+    ("will_not_perform", "Alteracao de senha recusada pela politica do servidor."),     # AD: WILL_NOT_PERFORM
+    ("will not perform", "Alteracao de senha recusada pela politica do servidor."),     # generic LDAP
+    ("unwillingtoperform", "Alteracao de senha recusada pela politica do servidor."),   # AD: unwillingToPerform
+    ("unwilling to perform", "Alteracao de senha recusada pela politica do servidor."), # generic LDAP
+    ("constraintviolation", "A nova senha viola a politica do Active Directory (complexidade, historico ou tempo minimo)."),  # AD camelCase
     ("constraint violation", "A nova senha viola a politica do Active Directory (complexidade, historico ou tempo minimo)."),
+    ("insufficientaccessrights", "Permissao insuficiente. Verifique as permissoes da conta de servico."),  # AD camelCase
     ("insufficient access rights", "Permissao insuficiente. Verifique as permissoes da conta de servico."),
 ]
 
@@ -53,6 +61,19 @@ def _user_facing_error(exc: Exception) -> str:
             return message
 
     return "Falha ao alterar a senha. Verifique os dados informados e tente novamente."
+
+
+def _summarize_ldap_result(result: dict | None) -> str:
+    """Build a compact diagnostic string from ldap3's result payload."""
+    if not result:
+        return "empty_result"
+
+    parts = []
+    for key in ("result", "description", "message", "dn"):
+        value = result.get(key)
+        if value not in (None, ""):
+            parts.append("%s=%s" % (key, value))
+    return " ".join(parts) if parts else "empty_result_fields"
 
 
 def _lookup_user_dn(upn: str) -> str | None:
@@ -132,39 +153,58 @@ def change_password(
         logger.error("ldap.auth status=connection_error upn=%s error=%s", upn, type(exc).__name__)
         return False, "Nao foi possivel conectar ao servidor de autenticacao. Tente novamente mais tarde."
 
-    # Step 3 — Change password
+    # Authentication verified — close the user connection, no longer needed.
+    conn.unbind()
+
+    # Step 3 — Reset password via service account (MODIFY_REPLACE).
+    #
+    # Using the service account (admin) to perform MODIFY_REPLACE instead of
+    # the user-initiated DELETE+ADD flow. This bypasses AD's minimum password
+    # age restriction while still requiring proof of the current password
+    # (Step 2 above). The service account must have "Reset Password" delegated
+    # on the target OU.
+    server = build_server()
     try:
-        # AD unicodePwd encoding: UTF-16-LE wrapped in double quotes
-        encoded_old = ('"%s"' % current_password).encode("utf-16-le")
+        admin_conn = open_connection(
+            server,
+            user=settings.LDAP_BIND_USER,
+            password=settings.LDAP_BIND_PASSWORD,
+            read_only=False,
+        )
+    except LDAPException as exc:
+        logger.error("ldap.admin_bind status=error upn=%s error=%s", upn, type(exc).__name__)
+        return False, "Nao foi possivel conectar ao servidor de autenticacao. Tente novamente mais tarde."
+
+    try:
         encoded_new = ('"%s"' % new_password).encode("utf-16-le")
 
-        result = conn.modify(
+        result = admin_conn.modify(
             user_dn,
-            {
-                "unicodePwd": [
-                    (MODIFY_DELETE, [encoded_old]),
-                    (MODIFY_ADD, [encoded_new]),
-                ]
-            },
+            {"unicodePwd": [(MODIFY_REPLACE, [encoded_new])]},
         )
 
         if not result:
-            description = conn.result.get("description", "unknown") if conn.result else "unknown"
+            detail = _summarize_ldap_result(admin_conn.result)
             logger.info(
-                "ldap.change_password status=failed upn=%s result_description=%s",
-                upn, description,
+                "ldap.change_password status=failed upn=%s detail=%s",
+                upn, detail,
             )
-            conn.unbind()
-            return False, _user_facing_error(Exception(str(conn.result)))
+            admin_conn.unbind()
+            return False, _user_facing_error(Exception(str(admin_conn.result)))
 
-        conn.unbind()
+        admin_conn.unbind()
         logger.info("ldap.change_password status=success upn=%s", upn)
         return True, "Senha alterada com sucesso."
 
     except LDAPException as exc:
-        logger.info("ldap.change_password status=error upn=%s error=%s", upn, type(exc).__name__)
+        logger.info(
+            "ldap.change_password status=error upn=%s error=%s detail=%s",
+            upn,
+            type(exc).__name__,
+            str(exc),
+        )
         try:
-            conn.unbind()
+            admin_conn.unbind()
         except Exception:
             pass
         return False, _user_facing_error(exc)

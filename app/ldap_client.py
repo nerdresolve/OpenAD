@@ -2,7 +2,7 @@
 ldap_client.py — Low-level LDAP connection factory.
 
 Responsible for building Server and Connection objects according to the
-configured transport mode (plain, StartTLS, or LDAPS). No business logic lives
+configured transport mode (plain or StartTLS). No business logic lives
 here — only connection construction and lifecycle helpers.
 """
 import logging
@@ -20,10 +20,10 @@ logger = logging.getLogger("openad")
 
 def _build_tls() -> Tls | None:
     """
-    Build a Tls object for StartTLS or LDAPS connections.
-    Returns None when neither mode is active.
+    Build a Tls object for StartTLS connections.
+    Returns None when TLS is not active.
     """
-    if not (settings.LDAP_USE_SSL or settings.LDAP_USE_TLS):
+    if not settings.LDAP_USE_TLS:
         return None
 
     if settings.CA_CERT_PATH:
@@ -48,7 +48,7 @@ def build_server() -> Server:
     return Server(
         settings.LDAP_SERVER,
         port=settings.LDAP_PORT,
-        use_ssl=settings.LDAP_USE_SSL,
+        use_ssl=False,
         tls=tls,
         get_info=ldap3.NONE,
         connect_timeout=5,

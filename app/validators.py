@@ -16,7 +16,7 @@ _UPN_PATTERN = re.compile(
 # Characters that have special meaning in LDAP filter syntax
 _LDAP_INJECTION_CHARS = re.compile(r"[\\*()\x00/]")
 
-_MIN_PASSWORD_LENGTH = 8
+_MIN_PASSWORD_LENGTH = 12
 _MAX_PASSWORD_LENGTH = 128
 _MAX_UPN_LENGTH = 256
 
