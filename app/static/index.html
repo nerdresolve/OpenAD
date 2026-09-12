@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenAD - Empresa</title>
-    <link rel="icon" type="image/webp" href="/static/favicon.webp">
+    <title>OpenAD</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -12,17 +12,21 @@
             padding: 0;
         }
 
+        /* Paleta NerdResolve. --marca e --marca-acento sao sobrescritas em
+           tempo de execucao por GET /api/branding (BRAND_COLOR e
+           BRAND_COLOR_ACCENT), por isso os nomes dizem o papel, nao a cor:
+           trocar a marca nao deve obrigar a reescrever regra de CSS. */
         :root {
-            --verde: #00784E;
-            --verde-dark: #005C3B;
-            --amarelo: #EAAB00;
-            --cinza: #989AA5;
-            --cinza-light: #E8E8EC;
+            --marca: #7C3AED;
+            --marca-escura: #6D28D9;
+            --marca-acento: #A855F7;
+            --cinza: #9691A4;
+            --cinza-light: #E4E1EA;
             --branco: #FFFFFF;
-            --erro: #C0392B;
-            --sucesso: #00784E;
-            --texto: #2D2D2D;
-            --texto-secundario: #5A5A6E;
+            --erro: #C41F2C;
+            --sucesso: #0F7A42;
+            --texto: #12082B;
+            --texto-secundario: #4A4358;
         }
 
         html {
@@ -50,10 +54,10 @@
             height: 6px;
             background: linear-gradient(
                 90deg,
-                var(--verde) 0%,
-                var(--verde) 60%,
-                var(--amarelo) 60%,
-                var(--amarelo) 100%
+                var(--marca) 0%,
+                var(--marca) 60%,
+                var(--marca-acento) 60%,
+                var(--marca-acento) 100%
             );
             z-index: 100;
         }
@@ -64,7 +68,7 @@
             right: -120px;
             width: 400px;
             height: 100vh;
-            background: var(--verde);
+            background: var(--marca);
             opacity: 0.03;
             transform: skewX(-28.7deg);
             z-index: 0;
@@ -77,7 +81,7 @@
             right: -60px;
             width: 180px;
             height: 100vh;
-            background: var(--amarelo);
+            background: var(--marca-acento);
             opacity: 0.04;
             transform: skewX(-28.7deg);
             z-index: 0;
@@ -129,14 +133,14 @@
         .logo-text {
             font-size: 22px;
             font-weight: 700;
-            color: var(--verde);
+            color: var(--marca);
             letter-spacing: 0.5px;
             text-transform: uppercase;
             line-height: 1.2;
         }
 
         .logo-text span {
-            color: var(--amarelo);
+            color: var(--marca-acento);
         }
 
         .page-title {
@@ -178,7 +182,7 @@
         }
 
         .form-group input:focus {
-            border-color: var(--verde);
+            border-color: var(--marca);
             box-shadow: 0 0 0 2px rgba(0, 120, 78, 0.08);
         }
 
@@ -257,7 +261,7 @@
             font-size: 14px;
             font-weight: 600;
             color: var(--branco);
-            background: var(--verde);
+            background: var(--marca);
             border: none;
             border-radius: 3px;
             cursor: pointer;
@@ -268,7 +272,7 @@
         }
 
         .submit-btn:hover:not(:disabled) {
-            background: var(--verde-dark);
+            background: var(--marca-escura);
         }
 
         .submit-btn:disabled {
@@ -357,16 +361,19 @@
 
     <div class="page-wrapper">
         <div class="card">
-            <!-- Logo area with breathing room as per PRD -->
+            <!-- Logo area with breathing room as per PRD.
+                 Name and logo come from GET /api/branding; the values below
+                 are the fallback for when that call fails. -->
             <div class="logo-area">
                 <div class="logo-mark">
                     <img
-                        src="/static/favicon.webp"
-                        alt="Empresa"
+                        src="/static/brand-mark.svg"
+                        alt=""
                         class="logo-img"
+                        id="brandLogo"
                         draggable="false"
                     />
-                    <div class="logo-text">Empresa</div>
+                    <div class="logo-text" id="brandName">OpenAD</div>
                 </div>
                 <p class="page-title">Alteracao de Senha</p>
             </div>
@@ -448,7 +455,7 @@
         </div>
     </div>
 
-    <div class="footer">Empresa &mdash; OpenAD &mdash; Portal de Autoatendimento</div>
+    <div class="footer" id="brandFooter">OpenAD &mdash; Portal de Autoatendimento</div>
 
     <script>
         (function () {
@@ -464,6 +471,42 @@
             var strengthLabel = document.getElementById("strengthLabel");
 
             var UPN_REGEX = /^[a-zA-Z0-9_.+\-]+@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*$/;
+
+            // Branding. The page ships with OpenAD defaults and repaints itself
+            // from GET /api/branding, so an operator rebrands the portal with
+            // environment variables alone. A failed call is not an error worth
+            // showing: the defaults already on screen stay as they are.
+            var UPN_EXAMPLE = "usuario@empresa.local";
+
+            function applyBranding(brand) {
+                if (brand.name) {
+                    document.getElementById("brandName").textContent = brand.name;
+                    document.title = brand.name;
+                }
+                if (brand.logo_url) {
+                    document.getElementById("brandLogo").src = brand.logo_url;
+                }
+                if (brand.color) {
+                    document.documentElement.style.setProperty("--marca", brand.color);
+                    document.documentElement.style.setProperty("--marca-escura", brand.color);
+                }
+                if (brand.color_accent) {
+                    document.documentElement.style.setProperty("--marca-acento", brand.color_accent);
+                }
+                if (brand.footer) {
+                    document.getElementById("brandFooter").textContent =
+                        brand.footer + " — Portal de Autoatendimento";
+                }
+                if (brand.upn_example) {
+                    UPN_EXAMPLE = brand.upn_example;
+                    upnInput.placeholder = brand.upn_example;
+                }
+            }
+
+            fetch("/api/branding")
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (brand) { if (brand) applyBranding(brand); })
+                .catch(function () { /* defaults stay */ });
 
             document.querySelectorAll(".toggle-password").forEach(function (btn) {
                 btn.addEventListener("click", function () {
@@ -540,7 +583,7 @@
                     upnInput.classList.add("input-error");
                     valid = false;
                 } else if (!UPN_REGEX.test(upnInput.value.trim())) {
-                    showFieldError("upnError", "Formato invalido. Use: usuario@empresa.local");
+                    showFieldError("upnError", "Formato invalido. Use: " + UPN_EXAMPLE);
                     upnInput.classList.add("input-error");
                     valid = false;
                 }

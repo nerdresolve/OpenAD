@@ -35,6 +35,19 @@ class Settings:
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
+    # Branding — the portal carries the operator's identity, not the vendor's.
+    # Served by GET /api/branding and applied by the page at load time, so a
+    # deployment rebrands itself without editing HTML or rebuilding the image.
+    BRAND_NAME: str = os.getenv("BRAND_NAME", "OpenAD")
+    BRAND_LOGO_URL: str = os.getenv("BRAND_LOGO_URL", "/static/brand-mark.svg")
+    BRAND_COLOR: str = os.getenv("BRAND_COLOR", "#7C3AED")
+    BRAND_COLOR_ACCENT: str = os.getenv("BRAND_COLOR_ACCENT", "#A855F7")
+    BRAND_FOOTER: str = os.getenv("BRAND_FOOTER", "")
+
+    # Example UPN shown in the username field placeholder. Set it to your own
+    # domain so users are not left guessing the expected format.
+    BRAND_UPN_EXAMPLE: str = os.getenv("BRAND_UPN_EXAMPLE", "usuario@empresa.local")
+
     def validate(self) -> list[str]:
         """Return list of missing or invalid required configuration fields."""
         missing = []

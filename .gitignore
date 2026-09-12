@@ -1,10 +1,35 @@
+# Segredos
+#
+# NENHUM `.env` entra no repositório. Este repo é público: segredo versionado é
+# segredo vazado, e quem clona leva junto a senha da conta de serviço do AD.
+#
+# O `.env.example` é o modelo — copie, preencha e mantenha o original fora daqui.
 .env
+.env.*
+!.env.example
+
+# Certificados da CA interna, quando o LDAPS usa CA própria.
+*.pem
+*.crt
+*.key
+certs/
+
+# Python
+__pycache__/
+*.py[cod]
 .venv/
 venv/
-__pycache__/
-*.pyc
 .pytest_cache/
 .mypy_cache/
-.DS_Store
-.codex
+.ruff_cache/
+
+# Ferramentas e scratch de diagnóstico local
 diagnose_ldap.py
+*.log
+
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+.codex

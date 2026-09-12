@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="OpenAD">
+  <defs>
+    <linearGradient id="m" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A855F7"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#12081C"/>
+  <!-- Cadeado de arco aberto: a senha é trocada por quem é dono dela. -->
+  <path d="M20 30 V22 C20 14.8 25.8 9 33 9 C40.2 9 46 14.8 46 22"
+        fill="none" stroke="url(#m)" stroke-width="6" stroke-linecap="round"/>
+  <rect x="12" y="29" width="40" height="27" rx="7" fill="url(#m)"/>
+  <circle cx="32" cy="40" r="4.6" fill="#12081C"/>
+  <path d="M32 44 V49" stroke="#12081C" stroke-width="3.6" stroke-linecap="round"/>
+</svg>

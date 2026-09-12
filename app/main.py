@@ -149,6 +149,27 @@ async def api_change_password(
     )
 
 
+@app.get("/api/branding")
+async def api_branding() -> JSONResponse:
+    """
+    Branding served to the frontend at page load.
+
+    Public by design: it carries only what is already visible on screen —
+    name, logo URL, colours and the example UPN. No directory data here.
+    """
+    return JSONResponse(
+        status_code=200,
+        content={
+            "name": settings.BRAND_NAME,
+            "logo_url": settings.BRAND_LOGO_URL,
+            "color": settings.BRAND_COLOR,
+            "color_accent": settings.BRAND_COLOR_ACCENT,
+            "footer": settings.BRAND_FOOTER or settings.BRAND_NAME,
+            "upn_example": settings.BRAND_UPN_EXAMPLE,
+        },
+    )
+
+
 @app.get("/health")
 async def health_check() -> JSONResponse:
     """
