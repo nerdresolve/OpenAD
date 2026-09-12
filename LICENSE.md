@@ -1,42 +1,42 @@
-# Licença
+# License
 
-**© 2026 NerdResolve. Todos os direitos reservados.**
+**© 2026 NerdResolve. All rights reserved.**
 
-Este repositório é público para **avaliação técnica e demonstração de
-portfólio**. O código pode ser lido, estudado e citado com atribuição.
+This repository is public for **technical evaluation and portfolio
+demonstration**. The code may be read, studied and quoted with attribution.
 
-Não é concedida licença para usar, copiar, modificar, distribuir ou explorar
-este software, no todo ou em parte, para qualquer finalidade, comercial ou
-não, sem autorização por escrito.
+No license is granted to use, copy, modify, distribute or exploit this
+software, in whole or in part, for any purpose, commercial or otherwise,
+without written authorization.
 
-## O que isso quer dizer na prática
+## What that means in practice
 
-Pode:
+You may:
 
-- ler o código e aprender com ele
-- citar trechos em avaliação técnica, artigo ou aula, com atribuição
-- rodar localmente, contra um diretório de teste, para avaliar
+- read the code and learn from it
+- quote excerpts in a technical review, article or class, with attribution
+- run it locally, against a test directory, to evaluate it
 
-Não pode:
+You may not:
 
-- colocar este portal em produção, para si ou para clientes
-- reutilizar o código em outro projeto
-- redistribuir, vender ou oferecer como serviço
+- put this portal into production, for yourself or for clients
+- reuse the code in another project
+- redistribute, sell or offer it as a service
 
-## Marca
+## Brand
 
-A identidade visual da **NerdResolve** — o logo, as cores e o nome — pertence
-à NerdResolve e **não** está coberta por nenhuma permissão acima. Um fork
-autorizado troca a marca pelas variáveis `BRAND_*`.
+The **NerdResolve** visual identity — the logo, the colors and the name —
+belongs to NerdResolve and is **not** covered by any permission above. An
+authorized fork swaps the brand out through the `BRAND_*` variables.
 
-## Sem garantia
+## No warranty
 
-O software é fornecido "como está", sem garantia de qualquer natureza. Ele
-executa operações de escrita em um Active Directory de produção: quem o roda
-responde pela configuração da conta de serviço, pelas permissões delegadas e
-pelo canal de rede até o Domain Controller.
+The software is provided "as is", without warranty of any kind. It performs
+write operations against a production Active Directory: whoever runs it is
+responsible for the service account configuration, the delegated permissions
+and the network channel to the Domain Controller.
 
-## Quer algo parecido?
+## Want something like this?
 
-Este repositório é uma vitrine. Se você quer um portal assim rodando na sua
-infraestrutura, fale com a NerdResolve: **contact@nerdresolve.com**
+This repository is a showcase. If you want a portal like this running in your
+infrastructure, talk to NerdResolve: **contact@nerdresolve.com**
